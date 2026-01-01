@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Build output (optional - you can include dist for easy loading)
+# dist/
+
+# IDE
+.vscode/
+.idea/
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment files with secrets
+.env
+.env.local
+.env.*.local
+
+# Logs
+*.log
+npm-debug.log*
+
+# TypeScript cache
+*.tsbuildinfo

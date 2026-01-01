@@ -1,0 +1,29 @@
+{
+    "manifest_version": 3,
+    "name": "Prompt Enhancer",
+    "description": "Transform any prompt into a powerful, optimized prompt using advanced AI techniques. Grammarly for AI prompts.",
+    "version": "1.0.0",
+    "icons": {
+        "16": "icons/icon.svg",
+        "32": "icons/icon.svg",
+        "48": "icons/icon.svg",
+        "128": "icons/icon.svg"
+    },
+    "action": {
+        "default_popup": "src/popup/index.html",
+        "default_icon": {
+            "16": "icons/icon.svg",
+            "32": "icons/icon.svg",
+            "48": "icons/icon.svg",
+            "128": "icons/icon.svg"
+        },
+        "default_title": "Prompt Enhancer"
+    },
+    "permissions": [
+        "storage"
+    ],
+    "host_permissions": [
+        "https://generativelanguage.googleapis.com/*",
+        "https://openrouter.ai/*"
+    ]
+}
