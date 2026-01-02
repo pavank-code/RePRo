@@ -1,0 +1,268 @@
+/* ===== REPRO CONTENT SCRIPT STYLES ===== */
+/* Sleek pill buttons with gradient outlines */
+/* All classes prefixed with repro- to avoid conflicts */
+
+/* ===== CONTAINER ===== */
+.repro-enhance-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 8px 12px;
+    z-index: 9999;
+    pointer-events: none;
+}
+
+.repro-enhance-container * {
+    pointer-events: auto;
+}
+
+/* ===== GRADIENT PILL BUTTON ===== */
+.repro-enhance-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 50px;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+    isolation: isolate;
+}
+
+/* Gradient border using pseudo-element */
+.repro-enhance-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #00f5d4, #00bbf9, #9b5de5);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.repro-enhance-btn:hover {
+    background: rgba(0, 245, 212, 0.08);
+    box-shadow: 0 0 20px rgba(0, 245, 212, 0.2);
+}
+
+.repro-enhance-btn:active {
+    transform: scale(0.97);
+}
+
+.repro-enhance-btn:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+    transform: none;
+}
+
+/* ===== BUTTON ICON ===== */
+.repro-btn-icon {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    background: linear-gradient(135deg, #00f5d4, #00bbf9);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== LOADING STATE ===== */
+.repro-enhance-btn.repro-btn-loading::before {
+    background: linear-gradient(135deg, #6366f1, #8b5cf6, #a855f7);
+    animation: repro-gradient-spin 1s linear infinite;
+}
+
+.repro-enhance-btn.repro-btn-loading {
+    background: rgba(139, 92, 246, 0.08);
+}
+
+@keyframes repro-gradient-spin {
+    0% {
+        background: linear-gradient(0deg, #00f5d4, #00bbf9, #9b5de5);
+    }
+
+    25% {
+        background: linear-gradient(90deg, #00f5d4, #00bbf9, #9b5de5);
+    }
+
+    50% {
+        background: linear-gradient(180deg, #00f5d4, #00bbf9, #9b5de5);
+    }
+
+    75% {
+        background: linear-gradient(270deg, #00f5d4, #00bbf9, #9b5de5);
+    }
+
+    100% {
+        background: linear-gradient(360deg, #00f5d4, #00bbf9, #9b5de5);
+    }
+}
+
+.repro-spinner {
+    display: inline-block;
+    width: 12px;
+    height: 12px;
+    border: 2px solid rgba(0, 245, 212, 0.3);
+    border-top-color: #00f5d4;
+    border-radius: 50%;
+    animation: repro-spin 0.8s linear infinite;
+}
+
+@keyframes repro-spin {
+    to {
+        transform: rotate(360deg);
+    }
+}
+
+/* ===== SUCCESS STATE ===== */
+.repro-enhance-btn.repro-btn-success::before {
+    background: linear-gradient(135deg, #10b981, #34d399, #6ee7b7);
+}
+
+.repro-enhance-btn.repro-btn-success {
+    background: rgba(16, 185, 129, 0.1);
+}
+
+.repro-enhance-btn.repro-btn-success .repro-btn-icon {
+    background: linear-gradient(135deg, #10b981, #34d399);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+}
+
+/* ===== ERROR STATE ===== */
+.repro-enhance-btn.repro-btn-error::before {
+    background: linear-gradient(135deg, #ef4444, #f87171, #fca5a5);
+}
+
+.repro-enhance-btn.repro-btn-error {
+    background: rgba(239, 68, 68, 0.1);
+    animation: repro-shake 0.4s ease;
+}
+
+@keyframes repro-shake {
+
+    0%,
+    100% {
+        transform: translateX(0);
+    }
+
+    10%,
+    30%,
+    50%,
+    70%,
+    90% {
+        transform: translateX(-3px);
+    }
+
+    20%,
+    40%,
+    60%,
+    80% {
+        transform: translateX(3px);
+    }
+}
+
+/* ===== CRAFT BUTTON (Secondary Action) ===== */
+.repro-craft-btn {
+    position: relative;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    background: transparent;
+    border: none;
+    border-radius: 50px;
+    color: #ffffff;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 13px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.25s ease;
+    white-space: nowrap;
+}
+
+.repro-craft-btn::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: 50px;
+    padding: 1.5px;
+    background: linear-gradient(135deg, #f472b6, #c084fc, #818cf8);
+    -webkit-mask:
+        linear-gradient(#fff 0 0) content-box,
+        linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+    pointer-events: none;
+}
+
+.repro-craft-btn:hover {
+    background: rgba(244, 114, 182, 0.08);
+    box-shadow: 0 0 20px rgba(244, 114, 182, 0.2);
+}
+
+.repro-craft-btn .repro-btn-icon {
+    background: linear-gradient(135deg, #f472b6, #c084fc);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+}
+
+/* ===== TOAST NOTIFICATION ===== */
+.repro-toast {
+    position: fixed;
+    bottom: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(100px);
+    padding: 12px 20px;
+    background: #1a1a25;
+    border: 1px solid #2a2a35;
+    border-radius: 12px;
+    color: #f0f0f5;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 14px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+    z-index: 99999;
+    opacity: 0;
+    transition: all 0.3s ease;
+    pointer-events: none;
+}
+
+.repro-toast-visible {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+}
+
+.repro-toast-success {
+    border-color: rgba(16, 185, 129, 0.5);
+    box-shadow: 0 0 24px rgba(16, 185, 129, 0.15);
+}
+
+.repro-toast-error {
+    border-color: rgba(239, 68, 68, 0.5);
+    box-shadow: 0 0 24px rgba(239, 68, 68, 0.15);
+}
+
+/* ===== RESPONSIVE ADJUSTMENTS ===== */
+@media (max-width: 600px) {
+
+    .repro-enhance-btn,
+    .repro-craft-btn {
+        padding: 6px 12px;
+        font-size: 12px;
+    }
+}

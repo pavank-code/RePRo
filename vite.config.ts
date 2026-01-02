@@ -1,15 +1,57 @@
 import { defineConfig } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
+import { copyFileSync, mkdirSync, existsSync } from 'fs';
+
+// Plugin to copy static files after build
+function copyStaticFiles() {
+    return {
+        name: 'copy-static-files',
+        closeBundle() {
+            // Ensure dist directory exists
+            if (!existsSync('dist')) {
+                mkdirSync('dist', { recursive: true });
+            }
+
+            // Copy content.css
+            try {
+                copyFileSync('src/content/content.css', 'dist/content.css');
+                console.log('✓ Copied content.css');
+            } catch (e) {
+                console.error('Failed to copy content.css:', e);
+            }
+
+            // Copy manifest.json
+            try {
+                copyFileSync('manifest.json', 'dist/manifest.json');
+                console.log('✓ Copied manifest.json');
+            } catch (e) {
+                console.error('Failed to copy manifest.json:', e);
+            }
+
+            // Copy icons directory
+            if (!existsSync('dist/icons')) {
+                mkdirSync('dist/icons', { recursive: true });
+            }
+            try {
+                copyFileSync('public/icon.svg', 'dist/icons/icon.svg');
+                console.log('✓ Copied icon.svg');
+            } catch (e) {
+                console.error('Failed to copy icon.svg:', e);
+            }
+        }
+    };
+}
 
 export default defineConfig({
-    plugins: [react()],
+    plugins: [react(), copyStaticFiles()],
     base: './',
     build: {
         outDir: 'dist',
         rollupOptions: {
             input: {
                 popup: resolve(__dirname, 'src/popup/index.html'),
+                content: resolve(__dirname, 'src/content/index.ts'),
             },
             output: {
                 entryFileNames: '[name].js',
