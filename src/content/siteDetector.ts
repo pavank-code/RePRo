@@ -1,5 +1,6 @@
 /**
  * Site Detector - Detects which AI platform is active and provides input selectors
+ * Updated for ChatGPT 5.2+ and modern interfaces
  */
 
 export interface SiteConfig {
@@ -11,43 +12,78 @@ export interface SiteConfig {
     getButtonContainer: (inputEl: HTMLElement) => HTMLElement | null;
 }
 
-// ChatGPT configuration
+// ChatGPT configuration (updated for 5.2+)
 const chatGPTConfig: SiteConfig = {
     name: 'ChatGPT',
     inputSelectors: [
+        // ChatGPT 5.x uses contenteditable div with ProseMirror
         '#prompt-textarea',
-        'textarea[data-id="root"]',
+        'div[id="prompt-textarea"]',
+        '.ProseMirror[contenteditable="true"]',
+        'div[contenteditable="true"][data-placeholder]',
         'div[contenteditable="true"]',
+        'textarea[placeholder*="Message"]',
         'textarea',
     ],
     getInputElement: () => {
         for (const selector of chatGPTConfig.inputSelectors) {
             const el = document.querySelector<HTMLElement>(selector);
-            if (el) return el;
+            if (el) {
+                console.log('[RePRo] Found input element:', selector);
+                return el;
+            }
         }
+        console.log('[RePRo] No input element found');
         return null;
     },
     getInputValue: (el: HTMLElement) => {
         if (el instanceof HTMLTextAreaElement) {
             return el.value;
         }
-        return el.textContent || el.innerText || '';
+        // For contenteditable (ProseMirror), get text content
+        return el.innerText || el.textContent || '';
     },
     setInputValue: (el: HTMLElement, value: string) => {
         if (el instanceof HTMLTextAreaElement) {
             el.value = value;
             el.dispatchEvent(new Event('input', { bubbles: true }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
         } else {
-            // For contenteditable divs
-            el.textContent = value;
-            el.dispatchEvent(new InputEvent('input', { bubbles: true, data: value }));
+            // For contenteditable divs (ProseMirror)
+            // Clear existing content
+            el.innerHTML = '';
+            // Create a paragraph with the text
+            const p = document.createElement('p');
+            p.textContent = value;
+            el.appendChild(p);
+
+            // Dispatch events to trigger React/ProseMirror updates
+            el.dispatchEvent(new InputEvent('input', { bubbles: true, inputType: 'insertText' }));
+            el.dispatchEvent(new Event('change', { bubbles: true }));
+
+            // Also try setting innerText directly as fallback
+            if (!el.innerText || el.innerText.trim() !== value.trim()) {
+                el.innerText = value;
+                el.dispatchEvent(new InputEvent('input', { bubbles: true }));
+            }
         }
-        // Trigger change events for React
-        el.dispatchEvent(new Event('change', { bubbles: true }));
     },
     getButtonContainer: (inputEl: HTMLElement) => {
-        // Position relative to the input's parent container
-        return inputEl.closest('form') || inputEl.parentElement;
+        // Find the form or parent container above the input
+        const form = inputEl.closest('form');
+        if (form) return form;
+
+        // Try to find a suitable parent container
+        let parent = inputEl.parentElement;
+        for (let i = 0; i < 5 && parent; i++) {
+            if (parent.classList.contains('relative') ||
+                parent.tagName === 'FORM' ||
+                parent.querySelector('button[data-testid="send-button"]')) {
+                return parent;
+            }
+            parent = parent.parentElement;
+        }
+        return inputEl.parentElement;
     },
 };
 
@@ -55,21 +91,27 @@ const chatGPTConfig: SiteConfig = {
 const geminiConfig: SiteConfig = {
     name: 'Gemini',
     inputSelectors: [
-        '.ql-editor',
+        '.ql-editor[contenteditable="true"]',
+        'rich-textarea [contenteditable="true"]',
+        'div[contenteditable="true"][aria-label*="prompt"]',
         '[contenteditable="true"]',
-        'rich-textarea .textarea',
         'div[data-placeholder]',
     ],
     getInputElement: () => {
         for (const selector of geminiConfig.inputSelectors) {
             const el = document.querySelector<HTMLElement>(selector);
-            if (el && el.getAttribute('contenteditable') === 'true') return el;
+            if (el && el.getAttribute('contenteditable') === 'true') {
+                console.log('[RePRo] Found Gemini input:', selector);
+                return el;
+            }
         }
         // Fallback: find any contenteditable
-        return document.querySelector<HTMLElement>('[contenteditable="true"]');
+        const fallback = document.querySelector<HTMLElement>('[contenteditable="true"]');
+        if (fallback) console.log('[RePRo] Found Gemini input via fallback');
+        return fallback;
     },
     getInputValue: (el: HTMLElement) => {
-        return el.textContent || el.innerText || '';
+        return el.innerText || el.textContent || '';
     },
     setInputValue: (el: HTMLElement, value: string) => {
         el.innerHTML = '';
@@ -79,7 +121,10 @@ const geminiConfig: SiteConfig = {
         el.dispatchEvent(new InputEvent('input', { bubbles: true }));
     },
     getButtonContainer: (inputEl: HTMLElement) => {
-        return inputEl.closest('.input-area') || inputEl.parentElement?.parentElement || inputEl.parentElement;
+        return inputEl.closest('.input-area') ||
+            inputEl.closest('form') ||
+            inputEl.parentElement?.parentElement ||
+            inputEl.parentElement;
     },
 };
 
@@ -87,14 +132,18 @@ const geminiConfig: SiteConfig = {
 const claudeConfig: SiteConfig = {
     name: 'Claude',
     inputSelectors: [
+        '.ProseMirror[contenteditable="true"]',
+        'div[contenteditable="true"][data-placeholder]',
         'div[contenteditable="true"]',
-        '.ProseMirror',
         'textarea',
     ],
     getInputElement: () => {
         for (const selector of claudeConfig.inputSelectors) {
             const el = document.querySelector<HTMLElement>(selector);
-            if (el) return el;
+            if (el) {
+                console.log('[RePRo] Found Claude input:', selector);
+                return el;
+            }
         }
         return null;
     },
@@ -102,7 +151,7 @@ const claudeConfig: SiteConfig = {
         if (el instanceof HTMLTextAreaElement) {
             return el.value;
         }
-        return el.textContent || el.innerText || '';
+        return el.innerText || el.textContent || '';
     },
     setInputValue: (el: HTMLElement, value: string) => {
         if (el instanceof HTMLTextAreaElement) {
@@ -115,7 +164,10 @@ const claudeConfig: SiteConfig = {
         }
     },
     getButtonContainer: (inputEl: HTMLElement) => {
-        return inputEl.closest('fieldset') || inputEl.parentElement?.parentElement || inputEl.parentElement;
+        return inputEl.closest('fieldset') ||
+            inputEl.closest('form') ||
+            inputEl.parentElement?.parentElement ||
+            inputEl.parentElement;
     },
 };
 
@@ -124,29 +176,37 @@ const claudeConfig: SiteConfig = {
  */
 export function detectSite(): SiteConfig | null {
     const hostname = window.location.hostname;
+    console.log('[RePRo] Detecting site:', hostname);
 
     if (hostname.includes('chat.openai.com') || hostname.includes('chatgpt.com')) {
+        console.log('[RePRo] Detected ChatGPT');
         return chatGPTConfig;
     }
     if (hostname.includes('gemini.google.com')) {
+        console.log('[RePRo] Detected Gemini');
         return geminiConfig;
     }
     if (hostname.includes('claude.ai')) {
+        console.log('[RePRo] Detected Claude');
         return claudeConfig;
     }
 
+    console.log('[RePRo] No matching site detected');
     return null;
 }
 
 /**
  * Wait for an element to appear in the DOM
  */
-export function waitForElement(selectors: string[], timeout = 10000): Promise<HTMLElement | null> {
+export function waitForElement(selectors: string[], timeout = 15000): Promise<HTMLElement | null> {
     return new Promise((resolve) => {
+        console.log('[RePRo] Waiting for element with selectors:', selectors);
+
         // Check if element already exists
         for (const selector of selectors) {
             const el = document.querySelector<HTMLElement>(selector);
             if (el) {
+                console.log('[RePRo] Element found immediately:', selector);
                 resolve(el);
                 return;
             }
@@ -157,6 +217,7 @@ export function waitForElement(selectors: string[], timeout = 10000): Promise<HT
             for (const selector of selectors) {
                 const el = document.querySelector<HTMLElement>(selector);
                 if (el) {
+                    console.log('[RePRo] Element found via observer:', selector);
                     observer.disconnect();
                     resolve(el);
                     return;
@@ -171,6 +232,7 @@ export function waitForElement(selectors: string[], timeout = 10000): Promise<HT
 
         // Timeout
         setTimeout(() => {
+            console.log('[RePRo] Element wait timeout');
             observer.disconnect();
             resolve(null);
         }, timeout);

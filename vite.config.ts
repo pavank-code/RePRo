@@ -1,14 +1,35 @@
-import { defineConfig } from 'vite';
+import { defineConfig, build } from 'vite';
 import react from '@vitejs/plugin-react';
 import { resolve } from 'path';
 import { copyFileSync, mkdirSync, existsSync } from 'fs';
 
-// Plugin to copy static files after build
-function copyStaticFiles() {
+// Plugin to build content script separately and copy static files
+function buildContentScript() {
     return {
-        name: 'copy-static-files',
-        closeBundle() {
-            // Ensure dist directory exists
+        name: 'build-content-script',
+        async closeBundle() {
+            // Build content script separately with IIFE format
+            await build({
+                configFile: false,
+                build: {
+                    outDir: 'dist',
+                    emptyOutDir: false,
+                    lib: {
+                        entry: resolve(__dirname, 'src/content/index.ts'),
+                        name: 'RePRoContent',
+                        formats: ['iife'],
+                        fileName: () => 'content.js',
+                    },
+                    rollupOptions: {
+                        output: {
+                            extend: true,
+                        },
+                    },
+                },
+            });
+            console.log('✓ Built content script');
+
+            // Copy static files
             if (!existsSync('dist')) {
                 mkdirSync('dist', { recursive: true });
             }
@@ -44,14 +65,13 @@ function copyStaticFiles() {
 }
 
 export default defineConfig({
-    plugins: [react(), copyStaticFiles()],
+    plugins: [react(), buildContentScript()],
     base: './',
     build: {
         outDir: 'dist',
         rollupOptions: {
             input: {
                 popup: resolve(__dirname, 'src/popup/index.html'),
-                content: resolve(__dirname, 'src/content/index.ts'),
             },
             output: {
                 entryFileNames: '[name].js',

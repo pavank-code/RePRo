@@ -23,6 +23,7 @@ function createButton(): HTMLButtonElement {
     const btn = document.createElement('button');
     btn.id = BUTTON_ID;
     btn.className = 'repro-enhance-btn';
+    btn.type = 'button'; // Prevent form submission
     btn.innerHTML = `
         <span class="repro-btn-icon">⚡</span>
         <span class="repro-btn-text">Improve</span>
@@ -124,6 +125,7 @@ async function handleEnhanceClick(
 
     // Get current input value
     const originalPrompt = siteConfig.getInputValue(inputEl);
+    console.log('[RePRo] Original prompt:', originalPrompt);
 
     if (!originalPrompt || originalPrompt.trim().length === 0) {
         showToast('Please enter a prompt to improve', 'error');
@@ -136,6 +138,7 @@ async function handleEnhanceClick(
     try {
         // Call enhancement API
         const result = await enhancePrompt(originalPrompt);
+        console.log('[RePRo] Enhancement result:', result);
 
         if (result.success && result.enhancedPrompt) {
             // Replace input with enhanced prompt
@@ -161,32 +164,24 @@ async function handleEnhanceClick(
 }
 
 /**
- * Position the button container above the input element
+ * Position the button container above the input element using fixed positioning
  */
 function positionButton(container: HTMLElement, inputEl: HTMLElement): void {
-    const inputRect = inputEl.getBoundingClientRect();
-    const containerParent = inputEl.closest('form') || inputEl.parentElement?.parentElement || document.body;
+    // Use fixed positioning relative to the viewport
+    const rect = inputEl.getBoundingClientRect();
 
-    // Make the parent position relative if needed
-    const parentStyle = window.getComputedStyle(containerParent as HTMLElement);
-    if (parentStyle.position === 'static') {
-        (containerParent as HTMLElement).style.position = 'relative';
+    container.style.position = 'fixed';
+    container.style.top = `${rect.top - 44}px`;
+    container.style.left = `${rect.left}px`;
+    container.style.width = `${rect.width}px`;
+    container.style.zIndex = '999999';
+
+    // Make sure it's in the body
+    if (!document.body.contains(container)) {
+        document.body.appendChild(container);
     }
 
-    // Try to position inside the parent container
-    if (containerParent && containerParent !== document.body) {
-        if (!containerParent.contains(container)) {
-            containerParent.insertBefore(container, inputEl.parentElement || inputEl);
-        }
-    } else {
-        // Fallback: position fixed
-        container.style.position = 'fixed';
-        container.style.top = `${inputRect.top - 48}px`;
-        container.style.left = `${inputRect.left}px`;
-        if (!document.body.contains(container)) {
-            document.body.appendChild(container);
-        }
-    }
+    console.log('[RePRo] Button positioned at:', rect.top - 44, rect.left);
 }
 
 /**
@@ -195,8 +190,11 @@ function positionButton(container: HTMLElement, inputEl: HTMLElement): void {
 export function initEnhanceButton(inputEl: HTMLElement, siteConfig: SiteConfig): void {
     // Check if button already exists
     if (document.getElementById(BUTTON_ID)) {
+        console.log('[RePRo] Button already exists');
         return;
     }
+
+    console.log('[RePRo] Initializing enhance button');
 
     // Create container and button
     const container = createContainer();
@@ -213,10 +211,22 @@ export function initEnhanceButton(inputEl: HTMLElement, siteConfig: SiteConfig):
         handleEnhanceClick(btn, inputEl, siteConfig);
     });
 
-    // Re-position on window resize
-    window.addEventListener('resize', () => {
+    // Re-position on window resize and scroll
+    const repositionHandler = () => {
         positionButton(container, inputEl);
-    });
+    };
+
+    window.addEventListener('resize', repositionHandler);
+    window.addEventListener('scroll', repositionHandler, true);
+
+    // Also reposition periodically to handle dynamic layout changes
+    const intervalId = setInterval(() => {
+        if (document.getElementById(BUTTON_ID)) {
+            positionButton(container, inputEl);
+        } else {
+            clearInterval(intervalId);
+        }
+    }, 1000);
 
     console.log(`[RePRo] Improve button initialized for ${siteConfig.name}`);
 }
@@ -228,5 +238,6 @@ export function removeEnhanceButton(): void {
     const container = document.getElementById(CONTAINER_ID);
     if (container) {
         container.remove();
+        console.log('[RePRo] Button removed');
     }
 }
